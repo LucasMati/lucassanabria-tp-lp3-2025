@@ -2,7 +2,7 @@ package py.edu.uc.lp32025.dto;
 
 import java.time.LocalDateTime;
 
-public abstract class BaseResponseDto {
+public class BaseResponseDto {
 
     private int status;
     private String error;

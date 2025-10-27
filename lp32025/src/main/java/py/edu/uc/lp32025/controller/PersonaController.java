@@ -1,16 +1,16 @@
 package py.edu.uc.lp32025.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import py.edu.uc.lp32025.domain.Persona;
+import py.edu.uc.lp32025.dto.BatchEmpleadosRequest;
+import py.edu.uc.lp32025.exception.BusinessException;
+import py.edu.uc.lp32025.exception.NotFoundException;
 import py.edu.uc.lp32025.service.PersonaService;
+import py.edu.uc.lp32025.service.EmpleadoTiempoCompletoService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/personas")
@@ -19,63 +19,84 @@ public class PersonaController {
     @Autowired
     private PersonaService personaService;
 
+    // Servicio con la lógica batch
+    @Autowired
+    private EmpleadoTiempoCompletoService empleadoService;
+
+    // =================================================================
+    // 1️⃣ Obtener todas las personas
+    // =================================================================
     @GetMapping
-    public List<Persona> getAllPersonas() {
-        return personaService.findAllPersonas();
+    public ResponseEntity<List<Persona>> getAllPersonas() {
+        List<Persona> personas = personaService.findAllPersonas();
+        return ResponseEntity.ok(personas);
     }
 
+    // =================================================================
+    // 2️⃣ Buscar persona por ID
+    // =================================================================
     @GetMapping("/{id}")
     public ResponseEntity<Persona> getPersonaById(@PathVariable Long id) {
-        Optional<Persona> persona = personaService.findPersonaById(id);
-        return persona.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Persona persona = personaService.findPersonaById(id)
+                .orElseThrow(() -> new NotFoundException("Persona no encontrada con ID: " + id));
+        return ResponseEntity.ok(persona);
     }
 
+    // =================================================================
+    // 3️⃣ Buscar personas por nombre (punto 6 del TP)
+    // =================================================================
+    @GetMapping(params = "nombre")
+    public ResponseEntity<List<Persona>> buscarPorNombre(@RequestParam String nombre) {
+        List<Persona> personasFiltradas = personaService.findByNombreContainingIgnoreCase(nombre);
+        if (personasFiltradas.isEmpty()) {
+            throw new NotFoundException("No se encontraron personas con el nombre: " + nombre);
+        }
+        return ResponseEntity.ok(personasFiltradas);
+    }
+
+    // =================================================================
+    // 4️⃣ Crear nueva persona
+    // =================================================================
     @PostMapping
-    public ResponseEntity<?> createPersona(@RequestBody Persona persona) {
-        try {
-            Persona createdPersona = personaService.savePersona(persona);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPersona);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Solicitud incorrecta");
-            errorResponse.put("mensaje", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
+    public ResponseEntity<Persona> createPersona(@RequestBody Persona persona) {
+        Persona createdPersona = personaService.savePersona(persona);
+        return ResponseEntity.status(201).body(createdPersona);
     }
 
+    // =================================================================
+    // 5️⃣ Actualizar persona existente
+    // =================================================================
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePersona(@PathVariable Long id, @RequestBody Persona personaDetails) {
-        Optional<Persona> optionalPersona = personaService.findPersonaById(id);
-
-        if (optionalPersona.isPresent()) {
-            Persona existingPersona = optionalPersona.get();
-            existingPersona.setNombre(personaDetails.getNombre());
-            existingPersona.setApellido(personaDetails.getApellido());
-            existingPersona.setFechaNacimiento(personaDetails.getFechaNacimiento());
-            existingPersona.setNumeroDocumento(personaDetails.getNumeroDocumento());
-
-            try {
-                Persona updatedPersona = personaService.savePersona(existingPersona);
-                return ResponseEntity.ok(updatedPersona);
-            } catch (IllegalArgumentException e) {
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Solicitud incorrecta");
-                errorResponse.put("mensaje", e.getMessage());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-            }
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Persona> updatePersona(@PathVariable Long id, @RequestBody Persona personaDetails) {
+        Persona updatedPersona = personaService.updatePersona(id, personaDetails);
+        return ResponseEntity.ok(updatedPersona);
     }
 
+    // =================================================================
+    // 6️⃣ Eliminar persona
+    // =================================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePersona(@PathVariable Long id) {
-        if (personaService.findPersonaById(id).isPresent()) {
-            personaService.deletePersonaById(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
+        if (personaService.findPersonaById(id).isEmpty()) {
+            throw new NotFoundException("No existe una persona con el ID: " + id);
+        }
+        personaService.deletePersonaById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // =================================================================
+    // 7️⃣ Nuevo endpoint: Persistencia polimórfica en batch
+    // =================================================================
+    @PostMapping("/batch")
+    public ResponseEntity<?> guardarEmpleadosEnBatch(@RequestBody BatchEmpleadosRequest request) {
+        try {
+            var empleadosGuardados = empleadoService.guardarEmpleadosEnBatch(request.getEmpleados());
+            return ResponseEntity.status(201).body(empleadosGuardados);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("Error al guardar empleados en batch: " + e.getMessage());
         }
     }
 }
