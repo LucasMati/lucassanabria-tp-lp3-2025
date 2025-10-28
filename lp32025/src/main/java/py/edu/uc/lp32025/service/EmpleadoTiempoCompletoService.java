@@ -7,7 +7,7 @@ import py.edu.uc.lp32025.domain.EmpleadoTiempoCompleto;
 import py.edu.uc.lp32025.domain.Persona;
 import py.edu.uc.lp32025.repository.EmpleadoTiempoCompletoRepository;
 import py.edu.uc.lp32025.repository.PersonaRepository;
-import py.edu.uc.lp32025.dto.EmpleadoTiempoCompletoImpuestoDTO;
+import py.edu.uc.lp32025.dto.EmpleadoTiempoCompletoImpuestoDto;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -67,7 +67,7 @@ public class EmpleadoTiempoCompletoService {
     }
 
     // Cálculo de Impuestos
-    public Optional<EmpleadoTiempoCompletoImpuestoDTO> calcularImpuestosDetalle(Long id) {
+    public Optional<EmpleadoTiempoCompletoImpuestoDto> calcularImpuestosDetalle(Long id) {
         log.info("Iniciando cálculo de impuestos para ID: {}", id);
         return empleadoRepository.findById(id).map(empleado -> {
 
@@ -85,7 +85,7 @@ public class EmpleadoTiempoCompletoService {
             boolean datosValidos = empleado.validarDatosEspecificos();
             String informacionCompleta = empleado.obtenerInformacionCompleta();
 
-            return new EmpleadoTiempoCompletoImpuestoDTO(
+            return new EmpleadoTiempoCompletoImpuestoDto(
                     empleado.getId(), salarioNeto, impuestoBase, deducciones,
                     impuestoTotal, datosValidos, informacionCompleta
             );

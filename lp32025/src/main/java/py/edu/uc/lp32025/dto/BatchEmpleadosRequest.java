@@ -8,7 +8,7 @@ import java.util.List;
 public class BatchEmpleadosRequest {
 
     @NotEmpty(message = "La lista de empleados no puede estar vacía.")
-    @Valid
+    @Valid // 🔹 Habilita validación sobre cada Persona en la lista
     private List<Persona> empleados;
 
     public BatchEmpleadosRequest() {}

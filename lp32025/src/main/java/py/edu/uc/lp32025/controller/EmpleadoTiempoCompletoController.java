@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import py.edu.uc.lp32025.domain.EmpleadoTiempoCompleto;
 import py.edu.uc.lp32025.domain.Persona; // <-- Importar la clase base Persona para el batch
 import py.edu.uc.lp32025.service.EmpleadoTiempoCompletoService;
-import py.edu.uc.lp32025.dto.EmpleadoTiempoCompletoImpuestoDTO;
+import py.edu.uc.lp32025.dto.EmpleadoTiempoCompletoImpuestoDto;
 import py.edu.uc.lp32025.dto.BatchEmpleadosRequest;
 import py.edu.uc.lp32025.dto.BatchResponseDto;
 import jakarta.validation.Valid; // Asegúrate de importar esto
@@ -85,7 +85,7 @@ public class EmpleadoTiempoCompletoController {
      * GET /api/empleados-tiempo-completo/{id}/impuesto
      */
     @GetMapping("/{id}/impuesto")
-    public ResponseEntity<EmpleadoTiempoCompletoImpuestoDTO> getImpuestoDetalle(@PathVariable Long id) {
+    public ResponseEntity<EmpleadoTiempoCompletoImpuestoDto> getImpuestoDetalle(@PathVariable Long id) {
         return empleadoService.calcularImpuestosDetalle(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

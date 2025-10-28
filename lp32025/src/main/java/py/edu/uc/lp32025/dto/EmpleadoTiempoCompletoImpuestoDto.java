@@ -2,7 +2,7 @@ package py.edu.uc.lp32025.dto;
 
 import java.math.BigDecimal;
 
-public class EmpleadoTiempoCompletoImpuestoDTO {
+public class EmpleadoTiempoCompletoImpuestoDto {
 
     private Long empleadoId;
     private BigDecimal salarioNeto;
@@ -13,7 +13,7 @@ public class EmpleadoTiempoCompletoImpuestoDTO {
     private String informacionCompleta; // <-- CAMPO AÑADIDO
 
     // Constructor corregido
-    public EmpleadoTiempoCompletoImpuestoDTO(
+    public EmpleadoTiempoCompletoImpuestoDto(
             Long empleadoId,
             BigDecimal salarioNeto,
             BigDecimal impuestoBase,

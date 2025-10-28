@@ -1,11 +1,11 @@
 package py.edu.uc.lp32025.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import py.edu.uc.lp32025.domain.Persona;
 import py.edu.uc.lp32025.dto.BatchEmpleadosRequest;
-import py.edu.uc.lp32025.exception.BusinessException;
 import py.edu.uc.lp32025.exception.NotFoundException;
 import py.edu.uc.lp32025.service.PersonaService;
 import py.edu.uc.lp32025.service.EmpleadoTiempoCompletoService;
@@ -19,7 +19,6 @@ public class PersonaController {
     @Autowired
     private PersonaService personaService;
 
-    // Servicio con la lógica batch
     @Autowired
     private EmpleadoTiempoCompletoService empleadoService;
 
@@ -55,19 +54,19 @@ public class PersonaController {
     }
 
     // =================================================================
-    // 4️⃣ Crear nueva persona
+    // 4️⃣ Crear nueva persona (validada)
     // =================================================================
     @PostMapping
-    public ResponseEntity<Persona> createPersona(@RequestBody Persona persona) {
+    public ResponseEntity<Persona> createPersona(@Valid @RequestBody Persona persona) {
         Persona createdPersona = personaService.savePersona(persona);
         return ResponseEntity.status(201).body(createdPersona);
     }
 
     // =================================================================
-    // 5️⃣ Actualizar persona existente
+    // 5️⃣ Actualizar persona existente (validada)
     // =================================================================
     @PutMapping("/{id}")
-    public ResponseEntity<Persona> updatePersona(@PathVariable Long id, @RequestBody Persona personaDetails) {
+    public ResponseEntity<Persona> updatePersona(@PathVariable Long id, @Valid @RequestBody Persona personaDetails) {
         Persona updatedPersona = personaService.updatePersona(id, personaDetails);
         return ResponseEntity.ok(updatedPersona);
     }
@@ -85,18 +84,11 @@ public class PersonaController {
     }
 
     // =================================================================
-    // 7️⃣ Nuevo endpoint: Persistencia polimórfica en batch
+    // 7️⃣ Nuevo endpoint: Persistencia polimórfica en batch (validada)
     // =================================================================
     @PostMapping("/batch")
-    public ResponseEntity<?> guardarEmpleadosEnBatch(@RequestBody BatchEmpleadosRequest request) {
-        try {
-            var empleadosGuardados = empleadoService.guardarEmpleadosEnBatch(request.getEmpleados());
-            return ResponseEntity.status(201).body(empleadosGuardados);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body("Error al guardar empleados en batch: " + e.getMessage());
-        }
+    public ResponseEntity<?> guardarEmpleadosEnBatch(@Valid @RequestBody BatchEmpleadosRequest request) {
+        var empleadosGuardados = empleadoService.guardarEmpleadosEnBatch(request.getEmpleados());
+        return ResponseEntity.status(201).body(empleadosGuardados);
     }
 }

@@ -2,62 +2,57 @@ package py.edu.uc.lp32025.exception.handler;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import py.edu.uc.lp32025.dto.BaseResponseDto;
-import py.edu.uc.lp32025.exception.BusinessException;
-import py.edu.uc.lp32025.exception.NotFoundException;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Manejo global de excepciones para toda la aplicación.
- * Convierte excepciones en respuestas JSON con BaseResponseDto.
- */
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<BaseResponseDto> handleBusinessException(BusinessException ex) {
-        BaseResponseDto response = new BaseResponseDto(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getCode(),
-                ex.getMessage()
-        );
-        response.setTimestamp(LocalDateTime.now());
-        return ResponseEntity.badRequest().body(response);
+    // Captura errores de Bean Validation (@Valid)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, Object> body = new HashMap<>();
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String message = error.getDefaultMessage();
+            fieldErrors.put(fieldName, message);
+        });
+
+        body.put("status", 400);
+        body.put("error", "BAD_REQUEST");
+        body.put("timestamp", LocalDateTime.now());
+        body.put("validationErrors", fieldErrors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<BaseResponseDto> handleNotFoundException(NotFoundException ex) {
-        BaseResponseDto response = new BaseResponseDto(
-                HttpStatus.NOT_FOUND.value(),
-                ex.getCode(),
-                ex.getMessage()
-        );
-        response.setTimestamp(LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-    }
-
+    // Captura errores de negocio (throw new IllegalArgumentException)
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<BaseResponseDto> handleIllegalArgument(IllegalArgumentException ex) {
-        BaseResponseDto response = new BaseResponseDto(
-                HttpStatus.BAD_REQUEST.value(),
-                "INVALID_ARGUMENT",
-                ex.getMessage()
-        );
-        response.setTimestamp(LocalDateTime.now());
-        return ResponseEntity.badRequest().body(response);
+    public ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", 400);
+        body.put("error", "BAD_REQUEST");
+        body.put("message", ex.getMessage());
+        body.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    // Captura genérica
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<BaseResponseDto> handleGeneralException(Exception ex) {
-        BaseResponseDto response = new BaseResponseDto(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "INTERNAL_ERROR",
-                "Ocurrió un error inesperado: " + ex.getMessage()
-        );
-        response.setTimestamp(LocalDateTime.now());
-        return ResponseEntity.internalServerError().body(response);
+    public ResponseEntity<Object> handleGeneralException(Exception ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", 500);
+        body.put("error", "INTERNAL_SERVER_ERROR");
+        body.put("message", ex.getMessage());
+        body.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }
