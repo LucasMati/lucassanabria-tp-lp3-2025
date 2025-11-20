@@ -1,0 +1,754 @@
+type: collection.insomnia.rest/5.0
+name: LP TP 2025 - Nómina y Permisos
+meta:
+  id: wrk_87899bcc2a4a48e48ebbb2dc0afe1c59
+  created: 1763605047576
+  modified: 1763605047576
+  description: ""
+collection:
+  - name: 📦 BATCH PROCESSING
+    meta:
+      id: fld_0ba060948af24d82bf98f80f473ce51b
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047804
+      description: Crear múltiples personas en un lote
+    children:
+      - url: "{{ base_url }}/api/personas/batch"
+        name: POST - Crear Personas en Batch
+        meta:
+          id: req_5c2c90c540c046dd82bc880f380d089e
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047807
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"empleados": [{"tipoEmpleado": "TIEMPO_COMPLETO", "nombre": "Luis",
+            "apellido": "Gómez", "numeroDocumento": "44444444",
+            "fechaNacimiento": "1993-04-15", "salarioMensual": 4500000,
+            "departamento": "Ventas"}, {"tipoEmpleado": "POR_HORA", "nombre":
+            "Sofia", "apellido": "Rodríguez", "numeroDocumento": "55555555",
+            "fechaNacimiento": "1996-09-20", "tarifaPorHora": 60000,
+            "horasTrabajadas": 35}]}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 👨‍💼 PERMISOS - GERENTES
+    meta:
+      id: fld_2be4937da4f5462e8236420b8b88426d
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047770
+      description: Solicitudes de vacaciones y permisos (SIN LÍMITE ANUAL)
+    children:
+      - url: "{{ base_url }}/gerentes/1/vacaciones"
+        name: POST - Solicitar Vacaciones (MÁX 30 días consecutivos)
+        meta:
+          id: req_72a86198e6f54a0cae55d8c8f8899a5e
+          created: 1763604693
+          modified: 1763605170927
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047772
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"fechaInicio": "2025-02-01", "fechaFin": "2025-02-25", "motivo":
+            "Descanso directivo"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/gerentes/{{ gerente_id }}/permisos"
+        name: POST - Solicitar Permiso (MÁX 10 días)
+        meta:
+          id: req_c81268a1603e4f5da01960a045b353dc
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047775
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"fechaInicio": "2025-03-01", "fechaFin": "2025-03-05", "motivo":
+            "Conferencia empresarial"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/gerentes/{{ gerente_id }}/dias-disponibles"
+        name: GET - Consultar Días Disponibles
+        meta:
+          id: req_f4df774920724501b2807fd9ea279e45
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047778
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 🔷 CREAR PERSONAS (Polimórfico Único)
+    meta:
+      id: fld_5b8b51abfbff4bd19cde314bb6be2723
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047601
+      description: UN ÚNICO endpoint para crear todos los tipos de personas
+    children:
+      - url: "{{ base_url }}/api/personas"
+        name: POST - Crear Contratista
+        meta:
+          id: req_594e8655b9344599974532f9905f7045
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047638
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"tipoEmpleado": "CONTRATISTA", "nombre": "Ana", "apellido": "Martínez",
+            "numeroDocumento": "22222222", "fechaNacimiento": "1995-07-22",
+            "montoPorProyecto": 1000000, "proyectosCompletados": 5,
+            "fechaFinContrato": "2026-12-31"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas"
+        name: POST - Crear EmpleadoPermisionable
+        meta:
+          id: req_723677828327473d9a4a02318b2625fd
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047650
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"nombre": "Roberto", "apellido": "Fernández", "numeroDocumento":
+            "33333333", "fechaNacimiento": "1985-11-05"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas"
+        name: POST - Crear Gerente
+        meta:
+          id: req_8b9d5ab4beca4a5a8ed54d2f38252d24
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047620
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"tipoEmpleado": "GERENTE", "nombre": "María", "apellido": "López",
+            "numeroDocumento": "87654321", "fechaNacimiento": "1992-08-20",
+            "salarioMensual": 8000000, "departamento": "Dirección"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas"
+        name: POST - Crear EmpleadoTiempoCompleto
+        meta:
+          id: req_9b25c841d08b47f79d149bc082c64c48
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047614
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"tipoEmpleado": "TIEMPO_COMPLETO", "nombre": "Juan", "apellido":
+            "Pérez", "numeroDocumento": "12345678", "fechaNacimiento":
+            "1990-05-15", "salarioMensual": 5000000, "departamento": "IT"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas"
+        name: POST - Crear EmpleadoPorHoras
+        meta:
+          id: req_cdb11535ab5e4bf1b9fb8efecf43a482
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047632
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"tipoEmpleado": "POR_HORA", "nombre": "Carlos", "apellido": "González",
+            "numeroDocumento": "11111111", "fechaNacimiento": "1988-03-10",
+            "tarifaPorHora": 50000, "horasTrabajadas": 40}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 💰 NÓMINA Y REPORTES
+    meta:
+      id: fld_74963875be6849f295da6bf5d66ba981
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047781
+      description: Reportes de nómina en JSON (Objetivo 2)
+    children:
+      - url: "{{ base_url }}/nomina/total-dias"
+        name: GET - Total Días Solicitados
+        meta:
+          id: req_3210aed547544186a561259e7b081575
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047791
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/nomina/reporte"
+        name: GET - Reporte Nómina Completo
+        meta:
+          id: req_48df4c60a663469198edd3d1b3f71e2a
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047783
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/nomina/reporte/filtrado?dias=10"
+        name: GET - Reporte Filtrado (Empleados con >10 días)
+        meta:
+          id: req_5e1e765ce16d4b4da6611a483a64f5a9
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047786
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/nomina/reporte/filtrado?dias=20"
+        name: GET - Reporte Filtrado (Empleados con >20 días)
+        meta:
+          id: req_686171d5801e427ca49de75cfa035ad7
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047788
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 📊 REMUNERACIONES
+    meta:
+      id: fld_8fc65356cbc444e0901ad017b3c08983
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047793
+      description: Cálculos polimórficos de remuneraciones
+    children:
+      - url: "{{ base_url }}/api/remuneraciones/nomina"
+        name: GET - Calcular Nómina Total (por tipo)
+        meta:
+          id: req_1bdc11c142ca44feb500450af5658b85
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047799
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/remuneraciones"
+        name: GET - Listar Todos los Empleados (DTO)
+        meta:
+          id: req_f1c3e94e87e84f32b27133151cf8ddfc
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047796
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/remuneraciones/reporte"
+        name: GET - Generar Reporte Completo (polimórfico)
+        meta:
+          id: req_faa29baa96b846e580727681fd8db5d9
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047802
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 💼 CÁLCULOS ESPECIALIZADOS
+    meta:
+      id: fld_9fc0dddb275f48d0b0c7137b2e7e0aec
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047697
+      description: Cálculos específicos para EmpleadoTiempoCompleto
+    children:
+      - url: "{{ base_url }}/api/empleados-tiempo-completo/{{ empleado_id }}/impuesto"
+        name: GET - Calcular Impuestos Detallado
+        meta:
+          id: req_4efb87893cb645319160f3ba9e7069af
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047756
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: ⚠️ PRUEBA DE EXCEPCIONES
+    meta:
+      id: fld_be720c0bd05046dbb55eb852c2634c3f
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047809
+      description: Casos que disparan excepciones (GlobalExceptionHandler)
+    children:
+      - url: "{{ base_url }}/api/personas"
+        name: ERROR - ValidationException - Fecha Nacimiento Futura (400)
+        meta:
+          id: req_147049354daa4dd29600d06aa9a0ff45
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047820
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"tipoEmpleado": "TIEMPO_COMPLETO", "nombre": "Test", "apellido":
+            "Usuario", "numeroDocumento": "12345678", "fechaNacimiento":
+            "2050-05-15", "salarioMensual": 5000000, "departamento": "IT"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas"
+        name: ERROR - ValidationException - Documento Vacío (400)
+        meta:
+          id: req_49f3d0f6f734454fbb03d40aed9e89b7
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047817
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"tipoEmpleado": "TIEMPO_COMPLETO", "nombre": "Test", "apellido":
+            "Usuario", "numeroDocumento": "", "fechaNacimiento": "1990-05-15",
+            "salarioMensual": 5000000, "departamento": "IT"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas/99999"
+        name: ERROR - EmpleadoNoEncontradoException (404)
+        meta:
+          id: req_9a0bb9195b2c4373a435f7897cef2652
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047812
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/empleados/{{ empleado_id }}/vacaciones"
+        name: ERROR - DiasInsuficientesException (400)
+        meta:
+          id: req_a9cc8e4bb027491197b0586ef62f29cf
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047814
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"fechaInicio": "2025-12-01", "fechaFin": "2026-01-15", "motivo":
+            "Intento de 45 días (supera límite de 20)"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/gerentes/{{ gerente_id }}/vacaciones"
+        name: ERROR - PermisoDenegadoException (400) - Gerente >30 días
+        meta:
+          id: req_d5c3f30649e241ed902b05631f8cd19a
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047822
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"fechaInicio": "2025-01-01", "fechaFin": "2025-02-15", "motivo":
+            "Intento de 45 días (máximo 30 consecutivos)"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 📅 PERMISOS - EMPLEADOS
+    meta:
+      id: fld_d70df842918b4872a650c4fde9a75dec
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047758
+      description: Solicitudes de vacaciones y permisos (límite 20 días/año)
+    children:
+      - url: "{{ base_url }}/empleados/{{ empleado_id }}/permisos"
+        name: POST - Solicitar Permiso
+        meta:
+          id: req_14b08ffbfbcc4ecc9e52830aaa8c44a7
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047765
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"fechaInicio": "2025-11-15", "fechaFin": "2025-11-17", "motivo": "Cita
+            médica"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/empleados/{{ empleado_id }}/dias-disponibles"
+        name: GET - Consultar Días Disponibles
+        meta:
+          id: req_260e2ac7c5d04428b6022feff410fc6d
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047767
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/empleados/{{ empleado_id }}/vacaciones"
+        name: POST - Solicitar Vacaciones
+        meta:
+          id: req_c3b4bf70b4744d06a903e73726fb3ba7
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047761
+        method: POST
+        body:
+          mimeType: application/json
+          text: '{"fechaInicio": "2025-12-01", "fechaFin": "2025-12-10", "motivo":
+            "Descanso anual"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: 📋 GESTIONAR PERSONAS
+    meta:
+      id: fld_f017b8e43295433cadf2c8311ebd0d6a
+      created: 1763604693
+      modified: 1763604693
+      sortKey: -1763605047661
+      description: CRUD de Personas - Obtener, actualizar, eliminar
+    children:
+      - url: "{{ base_url }}/api/personas/{{ empleado_id }}"
+        name: PUT - Actualizar Persona
+        meta:
+          id: req_38f6ea5963014e10a1e18819d944b091
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047685
+        method: PUT
+        body:
+          mimeType: application/json
+          text: '{"nombre": "Juan Carlos", "apellido": "Pérez García", "numeroDocumento":
+            "12345678", "fechaNacimiento": "1990-05-15"}'
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas?nombre=Juan"
+        name: GET - Buscar por Nombre
+        meta:
+          id: req_c46837a3ad1a4420be44f4df6249879d
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047679
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas/{{ empleado_id }}"
+        name: DELETE - Eliminar Persona
+        meta:
+          id: req_d3b15bcabd774783b9b3b816a75a1505
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047691
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas/{{ empleado_id }}"
+        name: GET - Obtener Persona por ID
+        meta:
+          id: req_faea0601a7d24ccfa7211b0892437ec6
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047673
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ base_url }}/api/personas"
+        name: GET - Obtener Todas las Personas
+        meta:
+          id: req_fbd1ecd26e9543d0aef6a664edad77cd
+          created: 1763604693
+          modified: 1763604693
+          isPrivate: false
+          description: ""
+          sortKey: -1763605047667
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_c46fce3e6fa9989d048b7d8ad234c640435e17d2
+    created: 1763605050857
+    modified: 1763605050857
+environments:
+  name: Local
+  meta:
+    id: env_6a4fa7784cce4be6ab650f2e8c5369c3
+    created: 1763604693
+    modified: 1763604693
+    isPrivate: false
+  data:
+    base_url: http://localhost:8080
+    empleado_id: "1"
+    gerente_id: "2"

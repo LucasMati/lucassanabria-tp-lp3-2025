@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import py.edu.uc.lp32025.domain.Persona;
 import py.edu.uc.lp32025.dto.BatchEmpleadosRequest;
-import py.edu.uc.lp32025.exception.NotFoundException;
+import py.edu.uc.lp32025.exception.EmpleadoNoEncontradoException;
 import py.edu.uc.lp32025.service.PersonaService;
 import py.edu.uc.lp32025.service.EmpleadoTiempoCompletoService;
 
@@ -37,24 +37,26 @@ public class PersonaController {
     @GetMapping("/{id}")
     public ResponseEntity<Persona> getPersonaById(@PathVariable Long id) {
         Persona persona = personaService.findPersonaById(id)
-                .orElseThrow(() -> new NotFoundException("Persona no encontrada con ID: " + id));
+                .orElseThrow(() -> new EmpleadoNoEncontradoException(id));
         return ResponseEntity.ok(persona);
     }
 
     // =================================================================
-    // 3️⃣ Buscar personas por nombre (punto 6 del TP)
+    // 3️⃣ Buscar personas por nombre
     // =================================================================
     @GetMapping(params = "nombre")
     public ResponseEntity<List<Persona>> buscarPorNombre(@RequestParam String nombre) {
         List<Persona> personasFiltradas = personaService.findByNombreContainingIgnoreCase(nombre);
+
         if (personasFiltradas.isEmpty()) {
-            throw new NotFoundException("No se encontraron personas con el nombre: " + nombre);
+            throw new EmpleadoNoEncontradoException("No se encontraron personas con el nombre: " + nombre);
         }
+
         return ResponseEntity.ok(personasFiltradas);
     }
 
     // =================================================================
-    // 4️⃣ Crear nueva persona (validada)
+    // 4️⃣ Crear nueva persona
     // =================================================================
     @PostMapping
     public ResponseEntity<Persona> createPersona(@Valid @RequestBody Persona persona) {
@@ -63,7 +65,7 @@ public class PersonaController {
     }
 
     // =================================================================
-    // 5️⃣ Actualizar persona existente (validada)
+    // 5️⃣ Actualizar persona existente
     // =================================================================
     @PutMapping("/{id}")
     public ResponseEntity<Persona> updatePersona(@PathVariable Long id, @Valid @RequestBody Persona personaDetails) {
@@ -77,14 +79,14 @@ public class PersonaController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePersona(@PathVariable Long id) {
         if (personaService.findPersonaById(id).isEmpty()) {
-            throw new NotFoundException("No existe una persona con el ID: " + id);
+            throw new EmpleadoNoEncontradoException(id);
         }
         personaService.deletePersonaById(id);
         return ResponseEntity.noContent().build();
     }
 
     // =================================================================
-    // 7️⃣ Nuevo endpoint: Persistencia polimórfica en batch (validada)
+    // 7️⃣ Batch polimórfico
     // =================================================================
     @PostMapping("/batch")
     public ResponseEntity<?> guardarEmpleadosEnBatch(@Valid @RequestBody BatchEmpleadosRequest request) {

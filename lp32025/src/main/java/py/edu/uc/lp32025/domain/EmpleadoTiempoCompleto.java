@@ -2,86 +2,89 @@ package py.edu.uc.lp32025.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 
 @Entity
 public class EmpleadoTiempoCompleto extends Persona {
 
-    // Campos específicos
     @Column(nullable = false)
-    private BigDecimal salarioMensual; // Salario bruto
+    private BigDecimal salarioMensual;  // SALARIO BRUTO
 
     @Column(nullable = false)
     private String departamento;
 
-    // =================================================================
-    // IMPLEMENTACIÓN DE MÉTODOS ABSTRACTOS DE PERSONA
-    // =================================================================
     public EmpleadoTiempoCompleto() {
         super();
     }
+
+    // =============================================================
+    // MÉTODOS ABSTRACTOS IMPLEMENTADOS
+    // =============================================================
+
+    /**
+     * Según el enunciado:
+     * calcularSalario(): retorna el salario mensual.
+     */
     @Override
     public BigDecimal calcularSalario() {
-        if (this.salarioMensual == null) {
+        return salarioMensual == null ? BigDecimal.ZERO : salarioMensual;
+    }
+
+    /**
+     * Regla del TP:
+     * - 5% si es del departamento IT
+     * - 3% para el resto
+     */
+    @Override
+    public BigDecimal calcularDeducciones() {
+        if (salarioMensual == null || departamento == null) {
             return BigDecimal.ZERO;
         }
-        // Factor de retención: 1 - 0.09 = 0.91
-        BigDecimal factorDescuento = new BigDecimal("0.91");
 
-        return this.salarioMensual
-                .multiply(factorDescuento)
+        BigDecimal porcentaje = departamento.equalsIgnoreCase("IT")
+                ? new BigDecimal("0.05")  // 5% para IT
+                : new BigDecimal("0.03"); // 3% otros departamentos
+
+        return salarioMensual.multiply(porcentaje)
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
-     * Calcula las deducciones del 5% sobre el salario mensual (bruto).
-     * Nota: Cambiado a 'protected' para coincidir con la visibilidad del método abstracto en Persona.
+     * Regla del TP:
+     * validarDatosEspecificos():
+     *  - salario > 0
+     *  - departamento no vacío
+     *
+     * *PLUS*: mantenemos tu salario mínimo requerido (2899048),
+     * porque vos querías conservarlo.
      */
-    @Override
-    public BigDecimal calcularDeducciones() { // <--- CORRECCIÓN DE PUBLIC A PROTECTED
-        if (this.salarioMensual == null) {
-            return BigDecimal.ZERO;
-        }
-        // Factor de deducción: 0.05 (5%)
-        BigDecimal factorDeduccion = new BigDecimal("0.05");
-
-        return this.salarioMensual
-                .multiply(factorDeduccion)
-                .setScale(2, RoundingMode.HALF_UP);
-    }
-
     @Override
     public boolean validarDatosEspecificos() {
         final BigDecimal SALARIO_MINIMO_REQUERIDO = new BigDecimal("2899048");
 
-        // 1. Validar campos no nulos
-        if (this.salarioMensual == null || this.departamento == null || this.departamento.trim().isEmpty()) {
-            return false;
-        }
-
-        // 2. Validar que el salario sea mayor o igual al mínimo requerido
-        return this.salarioMensual.compareTo(SALARIO_MINIMO_REQUERIDO) >= 0;
+        return salarioMensual != null
+                && salarioMensual.compareTo(SALARIO_MINIMO_REQUERIDO) >= 0
+                && departamento != null
+                && !departamento.isBlank();
     }
 
-    // =================================================================
-    // SOBRESCRITURA DE obtenerInformacionCompleta()
-    // =================================================================
+    // =============================================================
+    // EXTENSIÓN DE obtenerInformacionCompleta()
+    // =============================================================
 
     @Override
     public String obtenerInformacionCompleta() {
-        // Llama al método de la superclase para obtener la información base
         return super.obtenerInformacionCompleta() +
-                // Agrega las propiedades específicas
-                ", Departamento: " + this.departamento +
-                ", Salario Bruto (Guardado): " + this.salarioMensual.setScale(2, RoundingMode.HALF_UP).toString();
+                ", Departamento: " + departamento +
+                ", Salario Bruto: " + salarioMensual.setScale(2, RoundingMode.HALF_UP);
     }
 
+    // =============================================================
+    // GETTERS Y SETTERS
+    // =============================================================
 
-    // =================================================================
-    // Getters y Setters para campos específicos
-    // =================================================================
     public BigDecimal getSalarioMensual() {
         return salarioMensual;
     }

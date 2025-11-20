@@ -6,6 +6,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import py.edu.uc.lp32025.dto.ErrorDto;
+import py.edu.uc.lp32025.exception.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -14,7 +16,9 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Captura errores de Bean Validation (@Valid)
+    // -------------------------------------------------------------------------
+    //  VALIDACIÓN DE @Valid  (SE MANTIENE COMO ESTÁ)
+    // -------------------------------------------------------------------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, Object> body = new HashMap<>();
@@ -34,7 +38,33 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    // Captura errores de negocio (throw new IllegalArgumentException)
+    // -------------------------------------------------------------------------
+    //  EXCEPCIONES PERSONALIZADAS DEL TRABAJO  (OBLIGATORIAS)
+    // -------------------------------------------------------------------------
+
+    @ExceptionHandler(EmpleadoNoEncontradoException.class)
+    public ResponseEntity<ErrorDto> handleEmpleadoNoEncontrado(EmpleadoNoEncontradoException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DiasInsuficientesException.class)
+    public ResponseEntity<ErrorDto> handleDiasInsuficientes(DiasInsuficientesException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(PermisoDenegadoException.class)
+    public ResponseEntity<ErrorDto> handlePermisoDenegado(PermisoDenegadoException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(MapeoInvalidoException.class)
+    public ResponseEntity<ErrorDto> handleMapeoInvalido(MapeoInvalidoException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    // -------------------------------------------------------------------------
+    //  IllegalArgument (tu lógica actual)
+    // -------------------------------------------------------------------------
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex) {
         Map<String, Object> body = new HashMap<>();
@@ -45,7 +75,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    // Captura genérica
+    // -------------------------------------------------------------------------
+    //  Excepción genérica (tu lógica actual)
+    // -------------------------------------------------------------------------
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneralException(Exception ex) {
         Map<String, Object> body = new HashMap<>();
@@ -54,5 +86,14 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         body.put("timestamp", LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    // -------------------------------------------------------------------------
+    //  Método privado para construir ErrorDto  (REQUERIDO POR LA CONSIGNA)
+    // -------------------------------------------------------------------------
+    private ResponseEntity<ErrorDto> build(HttpStatus status, String message) {
+        return ResponseEntity
+                .status(status)
+                .body(new ErrorDto(message, status.value()));
     }
 }

@@ -8,120 +8,104 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Column;
 
-// IMPORTS DE BEAN VALIDATION
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-// IMPORTS DE JACKSON
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-// Configuración de Jackson para la deserialización polimórfica
+import lombok.Getter;
+import lombok.Setter;
+import py.edu.uc.lp32025.interfaces.Mapeable;
+
+@Setter
+@Getter
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
-        property = "tipoEmpleado" // Campo esperado en el JSON
+        property = "tipoEmpleado"
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = EmpleadoTiempoCompleto.class, name = "TIEMPO_COMPLETO"),
         @JsonSubTypes.Type(value = EmpleadoPorHoras.class, name = "POR_HORA"),
-        @JsonSubTypes.Type(value = Contratista.class, name = "CONTRATISTA")
+        @JsonSubTypes.Type(value = Contratista.class, name = "CONTRATISTA"),
+        @JsonSubTypes.Type(value = Gerente.class, name = "GERENTE")
 })
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-public abstract class Persona {
+public abstract class Persona implements Mapeable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Campos base
+    // 📌 Datos básicos
     @Column(nullable = false)
     private String nombre;
+
     private String apellido;
     private LocalDate fechaNacimiento;
 
-    // =================================================================
-    // APLICACIÓN DE BEAN VALIDATION EN numeroDocumento
-    // =================================================================
+    // 📌 Validación documento
     @NotBlank(message = "El número de documento no puede estar vacío.")
-
-    // Regexp: Inicia con 1-9 (mayor a 0), seguido de 0 o más dígitos (solo números).
     @Pattern(regexp = "^[1-9][0-9]*$", message = "El número de documento debe ser un valor numérico positivo mayor a 0.")
-
     @Size(max = 20, message = "El número de documento no puede exceder los 20 dígitos.")
-
     @Column(unique = true, nullable = false)
     private String numeroDocumento;
 
-    // CONSTRUCTOR SIN ARGUMENTOS (Obligatorio para JPA y Jackson)
-    public Persona() {
-        // Constructor vacío
+    // =============================================================
+    // 🆕 NUEVOS CAMPOS REQUERIDOS POR EL TRABAJO
+    // =============================================================
+    private int diasVacacionesAnuales = 0;
+    private int diasPermisoAnuales = 0;
+
+    public int getTotalDiasSolicitados() {
+        return diasVacacionesAnuales + diasPermisoAnuales;
     }
 
-    // =================================================================
-    // MÉTODOS ABSTRACTOS (Polimorfismo)
-    // =================================================================
+    public Persona() {}
 
-    /** Define el cálculo de salario neto. */
+    // Métodos abstractos
     public abstract BigDecimal calcularSalario();
-
-    /** Define el cálculo de deducciones específicas (Template Method). */
     public abstract BigDecimal calcularDeducciones();
-
-    /** Define la validación de campos específicos (lógica de negocio). */
     public abstract boolean validarDatosEspecificos();
 
-    // =================================================================
-    // TEMPLATE METHOD PATTERN (Cálculo de Impuestos)
-    // =================================================================
-
-    /**
-     * Template Method: Define el esqueleto del algoritmo de cálculo de impuestos.
-     */
+    // Template método de impuestos
     public final BigDecimal calcularImpuestos() {
         BigDecimal salario = this.calcularSalario();
         BigDecimal impuestoBase = this.calcularImpuestoBase();
         BigDecimal deducciones = this.calcularDeducciones();
-
-        // Impuesto Total = Impuesto Base - Deducciones (mínimo 0)
         return impuestoBase.subtract(deducciones).max(BigDecimal.ZERO);
     }
 
-    /** Calcula el 10% del salario (Impuesto Base). */
     public BigDecimal calcularImpuestoBase() {
         BigDecimal salario = this.calcularSalario();
         if (salario == null) return BigDecimal.ZERO;
         return salario.multiply(new BigDecimal("0.10"));
     }
 
-    // =================================================================
-    // MÉTODOS CONCRETOS
-    // =================================================================
-
-    /** Proporciona la información base de la persona y llama a calcularSalario() (Polimórfico). */
     public String obtenerInformacionCompleta() {
         return "ID: " + id +
                 ", Nombre: " + nombre + " " + apellido +
                 ", Documento: " + numeroDocumento +
-                ", Fecha Nac.: " + fechaNacimiento.toString() +
-                ", Salario Neto: " + this.calcularSalario().toString();
+                ", Fecha Nac.: " + fechaNacimiento +
+                ", Salario Neto: " + this.calcularSalario();
     }
 
-    // =================================================================
-    // Getters y Setters
-    // =================================================================
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public String getApellido() { return apellido; }
-    public void setApellido(String apellido) { this.apellido = apellido; }
-    public LocalDate getFechaNacimiento() { return fechaNacimiento; }
-    public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
-    public String getNumeroDocumento() { return numeroDocumento; }
-    public void setNumeroDocumento(String numeroDocumento) { this.numeroDocumento = numeroDocumento; }
+    @Override
+    public PosicionGps ubicarElemento() {
+        return new PosicionGps(-25.2637, -57.5759);
+    }
+
+    @Override
+    public Avatar obtenerImagen() {
+        return new Avatar(
+                "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                nombre + " " + apellido
+        );
+    }
 }

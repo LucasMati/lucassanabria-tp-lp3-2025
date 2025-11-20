@@ -8,6 +8,9 @@ import py.edu.uc.lp32025.domain.EmpleadoTiempoCompleto;
 import py.edu.uc.lp32025.repository.PersonaRepository;
 import py.edu.uc.lp32025.dto.EmpleadoDto;
 import py.edu.uc.lp32025.dto.ReporteEmpleadoDto;
+import py.edu.uc.lp32025.exception.EmpleadoNoEncontradoException;
+import py.edu.uc.lp32025.exception.PermisoDenegadoException;
+import py.edu.uc.lp32025.exception.DiasInsuficientesException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,7 +18,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-// Logger SLF4J
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +33,12 @@ public class RemuneracionesService {
         this.personaRepository = personaRepository;
     }
 
-    /**
-     * Retorna una lista de DTOs con la información básica y la información completa calculada.
-     */
+    // ================================================================
+    // Listar todos los empleados en forma polimórfica
+    // ================================================================
     @Transactional(readOnly = true)
     public List<EmpleadoDto> listarTodosLosEmpleados() {
+
         List<Persona> empleados = personaRepository.findAll();
 
         return empleados.stream()
@@ -44,12 +47,10 @@ public class RemuneracionesService {
     }
 
     private EmpleadoDto mapToEmpleadoDto(Persona persona) {
-        String tipoEmpleado;
-        if (persona instanceof EmpleadoTiempoCompleto) {
-            tipoEmpleado = "TIEMPO_COMPLETO";
-        } else {
-            tipoEmpleado = persona.getClass().getSimpleName();
-        }
+
+        String tipoEmpleado = (persona instanceof EmpleadoTiempoCompleto)
+                ? "TIEMPO_COMPLETO"
+                : persona.getClass().getSimpleName();
 
         String infoCompleta = persona.obtenerInformacionCompleta();
 
@@ -64,15 +65,15 @@ public class RemuneracionesService {
         );
     }
 
-    // =================================================================
-    // 4.2 Cálculo de Nómina Total con Reporte Polimórfico en Consola
-    // =================================================================
-
+    // ================================================================
+    // Cálculo de nómina polimórfica
+    // ================================================================
     public Map<String, BigDecimal> calcularNominaTotal() {
+
         List<Persona> empleados = personaRepository.findAll();
         Map<String, BigDecimal> nomina = new HashMap<>();
 
-        log.info("=== Calculando nómina total (Reporte Polimórfico) ===");
+        log.info("=== Calculando nómina total (reporte polimórfico) ===");
 
         for (Persona p : empleados) {
             try {
@@ -82,10 +83,13 @@ public class RemuneracionesService {
                 String tipo = p.getClass().getSimpleName();
                 nomina.put(tipo, nomina.getOrDefault(tipo, BigDecimal.ZERO).add(salario));
 
-                // 🔹 Línea que muestra el detalle por tipo de empleado
                 log.info("{} → {}: Salario {}", tipo, p.getNombre(), salario);
+
             } catch (Exception e) {
                 log.warn("Error al calcular salario para {}: {}", p.getNombre(), e.getMessage());
+                throw new RuntimeException(
+                        "Error al calcular salario para " + p.getNombre() + ": " + e.getMessage()
+                );
             }
         }
 
@@ -94,18 +98,20 @@ public class RemuneracionesService {
         return nomina;
     }
 
-    // =================================================================
-    // 4.3 Reporte Completo (Con Logs Detallados)
-    // =================================================================
-
+    // ================================================================
+    // Reporte polimórfico completo
+    // ================================================================
     public List<ReporteEmpleadoDto> generarReporteCompleto() {
+
         List<Persona> empleados = personaRepository.findAll();
         List<ReporteEmpleadoDto> reporte = new java.util.ArrayList<>();
 
         log.info("=== Generando reporte polimórfico de empleados ===");
 
         for (Persona p : empleados) {
+
             try {
+
                 log.info("──────────────────────────────────────────────");
                 log.info("Empleado tipo: {} → {}", p.getClass().getSimpleName(), p.getNombre());
 
@@ -114,21 +120,13 @@ public class RemuneracionesService {
                 BigDecimal impuestoBase = p.calcularImpuestoBase();
                 BigDecimal deducciones = p.calcularDeducciones();
                 BigDecimal impuestoTotal = p.calcularImpuestos();
-                boolean datosValidos;
+                boolean datosValidos = true;
 
                 try {
-                    datosValidos = p.validarDatosEspecificos();
+                    p.validarDatosEspecificos();
                 } catch (Exception e) {
                     datosValidos = false;
                 }
-
-                // 🔹 Log detallado del estado de cada empleado
-                log.info("Salario: {}", salario);
-                log.info("Impuesto base: {}", impuestoBase);
-                log.info("Deducciones: {}", deducciones);
-                log.info("Impuesto total: {}", impuestoTotal);
-                log.info("Datos válidos: {}", datosValidos);
-                log.info("Información completa: {}", info);
 
                 ReporteEmpleadoDto dto = new ReporteEmpleadoDto(
                         p.getId(),
@@ -141,9 +139,13 @@ public class RemuneracionesService {
                         impuestoTotal,
                         datosValidos
                 );
+
                 reporte.add(dto);
+
             } catch (Exception ex) {
+
                 log.warn("❌ Error al generar reporte para {}: {}", p.getNombre(), ex.getMessage());
+
                 reporte.add(new ReporteEmpleadoDto(
                         p.getId(),
                         p.getNombre() + " " + p.getApellido(),
@@ -159,7 +161,7 @@ public class RemuneracionesService {
         }
 
         log.info("=== Fin del reporte polimórfico ===");
+
         return reporte;
     }
-
 }
