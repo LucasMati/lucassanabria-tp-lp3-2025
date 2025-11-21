@@ -5,10 +5,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import py.edu.uc.lp32025.domain.Persona;
-import py.edu.uc.lp32025.domain.EmpleadoPermisionable;
+import py.edu.uc.lp32025.interfaces.Permisionable;
 import py.edu.uc.lp32025.dto.PermisoDiasRequestDto;
 import py.edu.uc.lp32025.dto.PermisoDiasResponseDto;
 import py.edu.uc.lp32025.exception.DiasInsuficientesException;
+import py.edu.uc.lp32025.exception.PermisoDenegadoException;
 import py.edu.uc.lp32025.exception.EmpleadoNoEncontradoException;
 import py.edu.uc.lp32025.repository.PersonaRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * Controlador REST para gestionar permisos y vacaciones de empleados.
+ * Usa POLIMORFISMO para trabajar con cualquier tipo de empleado que implemente Permisionable.
+ */
 @RestController
 @RequestMapping("/empleados")
 @Slf4j
@@ -27,14 +32,9 @@ public class EmpleadoPermisosController extends BaseController {
 
     /**
      * POST /empleados/{id}/vacaciones
-     * Solicita vacaciones para un empleado permisionable.
+     * Solicita vacaciones para cualquier empleado permisionable.
      *
-     * Request body:
-     * {
-     *   "fechaInicio": "2025-02-10",
-     *   "fechaFin": "2025-02-15",
-     *   "motivo": "Descanso personal"
-     * }
+     * ✅ POLIMORFISMO: Funciona para EmpleadoTiempoCompleto, EmpleadoPorHoras, Contratista y Gerente
      */
     @PostMapping("/{id}/vacaciones")
     public ResponseEntity<PermisoDiasResponseDto> solicitarVacaciones(
@@ -44,41 +44,46 @@ public class EmpleadoPermisosController extends BaseController {
         try {
             Persona p = getPersonaOrThrow(id);
 
-            if (!(p instanceof EmpleadoPermisionable emp)) {
-                throw new IllegalArgumentException("El empleado no es permisionable.");
+            // ✅ POLIMORFISMO VERDADERO: Verifica si implementa Permisionable
+            if (!(p instanceof Permisionable emp)) {
+                throw new IllegalArgumentException(
+                        "El empleado con ID " + id + " no puede solicitar vacaciones. " +
+                                "Tipo: " + p.getClass().getSimpleName()
+                );
             }
 
             LocalDate inicio = request.getFechaInicio();
             LocalDate fin = request.getFechaFin();
             long dias = ChronoUnit.DAYS.between(inicio, fin);
 
-            // Llamar al método que lanza DiasInsuficientesException si es necesario
+            // Llamar al método polimórfico
             emp.solicitarVacaciones(inicio, fin);
 
             // Persistir cambios
-            personaRepository.save(emp);
+            personaRepository.save(p);
 
             // Construir respuesta exitosa
             PermisoDiasResponseDto response = new PermisoDiasResponseDto(
-                    emp.getId(),
-                    emp.getNombre() + " " + emp.getApellido(),
+                    p.getId(),
+                    p.getNombre() + " " + p.getApellido(),
                     "VACACIONES",
                     (int) dias,
-                    emp.getDiasVacacionesAnuales(),
-                    emp.getDiasPermisoAnuales(),
-                    emp.getTotalDiasSolicitados(),
+                    p.getDiasVacacionesAnuales(),
+                    p.getDiasPermisoAnuales(),
+                    p.getTotalDiasSolicitados(),
                     inicio,
                     fin,
                     request.getMotivo(),
                     true,
-                    "Vacaciones registradas correctamente."
+                    "Vacaciones registradas correctamente para " + p.getClass().getSimpleName()
             );
 
-            log.info("✓ Vacaciones aprobadas para empleado ID {}: {} días", id, dias);
+            log.info("✅ Vacaciones aprobadas para {} (ID {}): {} días",
+                    p.getClass().getSimpleName(), id, dias);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
-        } catch (DiasInsuficientesException ex) {
-            log.warn("✗ Vacaciones rechazadas para empleado ID {}: {}", id, ex.getMessage());
+        } catch (PermisoDenegadoException ex) {
+            log.warn("❌ Vacaciones rechazadas para empleado ID {}: {}", id, ex.getMessage());
             PermisoDiasResponseDto response = new PermisoDiasResponseDto();
             response.setExitoso(false);
             response.setMensaje(ex.getMessage());
@@ -86,11 +91,11 @@ public class EmpleadoPermisosController extends BaseController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 
         } catch (EmpleadoNoEncontradoException ex) {
-            log.error("✗ Empleado no encontrado: {}", id);
+            log.error("❌ Empleado no encontrado: {}", id);
             throw ex;
 
         } catch (Exception ex) {
-            log.error("✗ Error inesperado: {}", ex.getMessage());
+            log.error("❌ Error inesperado: {}", ex.getMessage());
             PermisoDiasResponseDto response = new PermisoDiasResponseDto();
             response.setExitoso(false);
             response.setMensaje("Error interno: " + ex.getMessage());
@@ -101,14 +106,9 @@ public class EmpleadoPermisosController extends BaseController {
 
     /**
      * POST /empleados/{id}/permisos
-     * Solicita permiso para un empleado permisionable.
+     * Solicita permiso para cualquier empleado permisionable.
      *
-     * Request body:
-     * {
-     *   "fechaInicio": "2025-02-10",
-     *   "fechaFin": "2025-02-12",
-     *   "motivo": "Cita médica"
-     * }
+     * ✅ POLIMORFISMO: Funciona para EmpleadoTiempoCompleto, EmpleadoPorHoras, Contratista y Gerente
      */
     @PostMapping("/{id}/permisos")
     public ResponseEntity<PermisoDiasResponseDto> solicitarPermiso(
@@ -118,8 +118,12 @@ public class EmpleadoPermisosController extends BaseController {
         try {
             Persona p = getPersonaOrThrow(id);
 
-            if (!(p instanceof EmpleadoPermisionable emp)) {
-                throw new IllegalArgumentException("El empleado no es permisionable.");
+            // ✅ POLIMORFISMO VERDADERO: Verifica si implementa Permisionable
+            if (!(p instanceof Permisionable emp)) {
+                throw new IllegalArgumentException(
+                        "El empleado con ID " + id + " no puede solicitar permisos. " +
+                                "Tipo: " + p.getClass().getSimpleName()
+                );
             }
 
             LocalDate inicio = request.getFechaInicio();
@@ -127,33 +131,34 @@ public class EmpleadoPermisosController extends BaseController {
             String motivo = request.getMotivo();
             long dias = ChronoUnit.DAYS.between(inicio, fin);
 
-            // Llamar al método que lanza DiasInsuficientesException si es necesario
+            // Llamar al método polimórfico
             emp.solicitarPermiso(motivo, inicio, fin);
 
             // Persistir cambios
-            personaRepository.save(emp);
+            personaRepository.save(p);
 
             // Construir respuesta exitosa
             PermisoDiasResponseDto response = new PermisoDiasResponseDto(
-                    emp.getId(),
-                    emp.getNombre() + " " + emp.getApellido(),
+                    p.getId(),
+                    p.getNombre() + " " + p.getApellido(),
                     "PERMISO",
                     (int) dias,
-                    emp.getDiasVacacionesAnuales(),
-                    emp.getDiasPermisoAnuales(),
-                    emp.getTotalDiasSolicitados(),
+                    p.getDiasVacacionesAnuales(),
+                    p.getDiasPermisoAnuales(),
+                    p.getTotalDiasSolicitados(),
                     inicio,
                     fin,
                     motivo,
                     true,
-                    "Permiso registrado correctamente."
+                    "Permiso registrado correctamente para " + p.getClass().getSimpleName()
             );
 
-            log.info("✓ Permiso aprobado para empleado ID {}: {} días (Motivo: {})", id, dias, motivo);
+            log.info("✅ Permiso aprobado para {} (ID {}): {} días (Motivo: {})",
+                    p.getClass().getSimpleName(), id, dias, motivo);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (DiasInsuficientesException ex) {
-            log.warn("✗ Permiso rechazado para empleado ID {}: {}", id, ex.getMessage());
+            log.warn("❌ Permiso rechazado para empleado ID {}: {}", id, ex.getMessage());
             PermisoDiasResponseDto response = new PermisoDiasResponseDto();
             response.setExitoso(false);
             response.setMensaje(ex.getMessage());
@@ -161,11 +166,11 @@ public class EmpleadoPermisosController extends BaseController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 
         } catch (EmpleadoNoEncontradoException ex) {
-            log.error("✗ Empleado no encontrado: {}", id);
+            log.error("❌ Empleado no encontrado: {}", id);
             throw ex;
 
         } catch (Exception ex) {
-            log.error("✗ Error inesperado: {}", ex.getMessage());
+            log.error("❌ Error inesperado: {}", ex.getMessage());
             PermisoDiasResponseDto response = new PermisoDiasResponseDto();
             response.setExitoso(false);
             response.setMensaje("Error interno: " + ex.getMessage());
@@ -176,33 +181,36 @@ public class EmpleadoPermisosController extends BaseController {
 
     /**
      * GET /empleados/{id}/dias-disponibles
-     * Obtiene el estado de días disponibles para un empleado.
+     * Obtiene el estado de días disponibles para cualquier empleado.
      */
     @GetMapping("/{id}/dias-disponibles")
     public ResponseEntity<PermisoDiasResponseDto> getDiasDisponibles(@PathVariable Long id) {
         try {
             Persona p = getPersonaOrThrow(id);
 
-            if (!(p instanceof EmpleadoPermisionable emp)) {
-                throw new IllegalArgumentException("El empleado no es permisionable.");
+            if (!(p instanceof Permisionable)) {
+                throw new IllegalArgumentException(
+                        "El empleado con ID " + id + " no tiene días asignables. " +
+                                "Tipo: " + p.getClass().getSimpleName()
+                );
             }
 
             PermisoDiasResponseDto response = new PermisoDiasResponseDto();
-            response.setEmpleadoId(emp.getId());
-            response.setNombreEmpleado(emp.getNombre() + " " + emp.getApellido());
-            response.setDiasVacacionesActuales(emp.getDiasVacacionesAnuales());
-            response.setDiasPermisoActuales(emp.getDiasPermisoAnuales());
-            response.setTotalDiasSolicitados(emp.getTotalDiasSolicitados());
+            response.setEmpleadoId(p.getId());
+            response.setNombreEmpleado(p.getNombre() + " " + p.getApellido());
+            response.setDiasVacacionesActuales(p.getDiasVacacionesAnuales());
+            response.setDiasPermisoActuales(p.getDiasPermisoAnuales());
+            response.setTotalDiasSolicitados(p.getTotalDiasSolicitados());
             response.setExitoso(true);
-            response.setMensaje("Información de días disponibles obtenida correctamente.");
+            response.setMensaje("Información de días disponibles para " + p.getClass().getSimpleName());
 
             return ResponseEntity.ok(response);
 
         } catch (EmpleadoNoEncontradoException ex) {
-            log.error("✗ Empleado no encontrado: {}", id);
+            log.error("❌ Empleado no encontrado: {}", id);
             throw ex;
         } catch (Exception ex) {
-            log.error("✗ Error al obtener días disponibles: {}", ex.getMessage());
+            log.error("❌ Error al obtener días disponibles: {}", ex.getMessage());
             throw new IllegalArgumentException(ex.getMessage());
         }
     }

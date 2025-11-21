@@ -52,12 +52,12 @@ collection:
       sortKey: -1763605047770
       description: Solicitudes de vacaciones y permisos (SIN LÍMITE ANUAL)
     children:
-      - url: "{{ base_url }}/gerentes/1/vacaciones"
+      - url: "{{ base_url }}/gerentes/{{ _.gerente_id }}/vacaciones"
         name: POST - Solicitar Vacaciones (MÁX 30 días consecutivos)
         meta:
           id: req_72a86198e6f54a0cae55d8c8f8899a5e
           created: 1763604693
-          modified: 1763605170927
+          modified: 1763607065475
           isPrivate: false
           description: ""
           sortKey: -1763605047772
@@ -102,12 +102,12 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ base_url }}/gerentes/{{ gerente_id }}/dias-disponibles"
+      - url: "{{ base_url }}/gerentes/{{ _.gerente_id }}/dias-disponibles"
         name: GET - Consultar Días Disponibles
         meta:
           id: req_f4df774920724501b2807fd9ea279e45
           created: 1763604693
-          modified: 1763604693
+          modified: 1763607051858
           isPrivate: false
           description: ""
           sortKey: -1763605047778
@@ -124,7 +124,7 @@ collection:
     meta:
       id: fld_5b8b51abfbff4bd19cde314bb6be2723
       created: 1763604693
-      modified: 1763604693
+      modified: 1763607794380
       sortKey: -1763605047601
       description: UN ÚNICO endpoint para crear todos los tipos de personas
     children:
@@ -133,7 +133,7 @@ collection:
         meta:
           id: req_594e8655b9344599974532f9905f7045
           created: 1763604693
-          modified: 1763604693
+          modified: 1763690479322
           isPrivate: false
           description: ""
           sortKey: -1763605047638
@@ -144,31 +144,6 @@ collection:
             "numeroDocumento": "22222222", "fechaNacimiento": "1995-07-22",
             "montoPorProyecto": 1000000, "proyectosCompletados": 5,
             "fechaFinContrato": "2026-12-31"}'
-        headers:
-          - name: Content-Type
-            value: application/json
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
-      - url: "{{ base_url }}/api/personas"
-        name: POST - Crear EmpleadoPermisionable
-        meta:
-          id: req_723677828327473d9a4a02318b2625fd
-          created: 1763604693
-          modified: 1763604693
-          isPrivate: false
-          description: ""
-          sortKey: -1763605047650
-        method: POST
-        body:
-          mimeType: application/json
-          text: '{"nombre": "Roberto", "apellido": "Fernández", "numeroDocumento":
-            "33333333", "fechaNacimiento": "1985-11-05"}'
         headers:
           - name: Content-Type
             value: application/json
@@ -237,15 +212,15 @@ collection:
         meta:
           id: req_cdb11535ab5e4bf1b9fb8efecf43a482
           created: 1763604693
-          modified: 1763604693
+          modified: 1763688847909
           isPrivate: false
           description: ""
           sortKey: -1763605047632
         method: POST
         body:
           mimeType: application/json
-          text: '{"tipoEmpleado": "POR_HORA", "nombre": "Carlos", "apellido": "González",
-            "numeroDocumento": "11111111", "fechaNacimiento": "1988-03-10",
+          text: '{"tipoEmpleado": "POR_HORA", "nombre": "Carlos", "apellido": "Lopéz",
+            "numeroDocumento": "222222", "fechaNacimiento": "1988-03-10",
             "tarifaPorHora": 50000, "horasTrabajadas": 40}'
         headers:
           - name: Content-Type
@@ -289,7 +264,7 @@ collection:
         meta:
           id: req_48df4c60a663469198edd3d1b3f71e2a
           created: 1763604693
-          modified: 1763604693
+          modified: 1763656978691
           isPrivate: false
           description: ""
           sortKey: -1763605047783
@@ -400,32 +375,6 @@ collection:
             send: true
             store: true
           rebuildPath: true
-  - name: 💼 CÁLCULOS ESPECIALIZADOS
-    meta:
-      id: fld_9fc0dddb275f48d0b0c7137b2e7e0aec
-      created: 1763604693
-      modified: 1763604693
-      sortKey: -1763605047697
-      description: Cálculos específicos para EmpleadoTiempoCompleto
-    children:
-      - url: "{{ base_url }}/api/empleados-tiempo-completo/{{ empleado_id }}/impuesto"
-        name: GET - Calcular Impuestos Detallado
-        meta:
-          id: req_4efb87893cb645319160f3ba9e7069af
-          created: 1763604693
-          modified: 1763604693
-          isPrivate: false
-          description: ""
-          sortKey: -1763605047756
-        method: GET
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
   - name: ⚠️ PRUEBA DE EXCEPCIONES
     meta:
       id: fld_be720c0bd05046dbb55eb852c2634c3f
@@ -491,7 +440,7 @@ collection:
         meta:
           id: req_9a0bb9195b2c4373a435f7897cef2652
           created: 1763604693
-          modified: 1763604693
+          modified: 1763693922661
           isPrivate: false
           description: ""
           sortKey: -1763605047812
@@ -504,12 +453,12 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ base_url }}/empleados/{{ empleado_id }}/vacaciones"
+      - url: "{{ base_url }}/empleados/1/vacaciones"
         name: ERROR - DiasInsuficientesException (400)
         meta:
           id: req_a9cc8e4bb027491197b0586ef62f29cf
           created: 1763604693
-          modified: 1763604693
+          modified: 1763693885037
           isPrivate: false
           description: ""
           sortKey: -1763605047814
@@ -529,12 +478,12 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ base_url }}/gerentes/{{ gerente_id }}/vacaciones"
+      - url: "{{ base_url }}/gerentes/3/vacaciones"
         name: ERROR - PermisoDenegadoException (400) - Gerente >30 días
         meta:
           id: req_d5c3f30649e241ed902b05631f8cd19a
           created: 1763604693
-          modified: 1763604693
+          modified: 1763693865001
           isPrivate: false
           description: ""
           sortKey: -1763605047822
@@ -562,12 +511,12 @@ collection:
       sortKey: -1763605047758
       description: Solicitudes de vacaciones y permisos (límite 20 días/año)
     children:
-      - url: "{{ base_url }}/empleados/{{ empleado_id }}/permisos"
+      - url: "{{ base_url }}/empleados/{{ _.empleado_id }}/permisos"
         name: POST - Solicitar Permiso
         meta:
           id: req_14b08ffbfbcc4ecc9e52830aaa8c44a7
           created: 1763604693
-          modified: 1763604693
+          modified: 1763730429387
           isPrivate: false
           description: ""
           sortKey: -1763605047765
@@ -587,12 +536,12 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ base_url }}/empleados/{{ empleado_id }}/dias-disponibles"
+      - url: "{{ base_url }}/empleados/{{ _.empleado_id }}/dias-disponibles"
         name: GET - Consultar Días Disponibles
         meta:
           id: req_260e2ac7c5d04428b6022feff410fc6d
           created: 1763604693
-          modified: 1763604693
+          modified: 1763730553725
           isPrivate: false
           description: ""
           sortKey: -1763605047767
@@ -605,19 +554,19 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ base_url }}/empleados/{{ empleado_id }}/vacaciones"
+      - url: "{{ base_url }}/empleados/{{ _.empleado_id }}/vacaciones"
         name: POST - Solicitar Vacaciones
         meta:
           id: req_c3b4bf70b4744d06a903e73726fb3ba7
           created: 1763604693
-          modified: 1763604693
+          modified: 1763730415824
           isPrivate: false
           description: ""
           sortKey: -1763605047761
         method: POST
         body:
           mimeType: application/json
-          text: '{"fechaInicio": "2025-12-01", "fechaFin": "2025-12-10", "motivo":
+          text: '{"fechaInicio": "2025-12-01", "fechaFin": "2025-12-20", "motivo":
             "Descanso anual"}'
         headers:
           - name: Content-Type
@@ -638,31 +587,6 @@ collection:
       sortKey: -1763605047661
       description: CRUD de Personas - Obtener, actualizar, eliminar
     children:
-      - url: "{{ base_url }}/api/personas/{{ empleado_id }}"
-        name: PUT - Actualizar Persona
-        meta:
-          id: req_38f6ea5963014e10a1e18819d944b091
-          created: 1763604693
-          modified: 1763604693
-          isPrivate: false
-          description: ""
-          sortKey: -1763605047685
-        method: PUT
-        body:
-          mimeType: application/json
-          text: '{"nombre": "Juan Carlos", "apellido": "Pérez García", "numeroDocumento":
-            "12345678", "fechaNacimiento": "1990-05-15"}'
-        headers:
-          - name: Content-Type
-            value: application/json
-        settings:
-          renderRequestBody: true
-          encodeUrl: true
-          followRedirects: global
-          cookies:
-            send: true
-            store: true
-          rebuildPath: true
       - url: "{{ base_url }}/api/personas?nombre=Juan"
         name: GET - Buscar por Nombre
         meta:
@@ -681,12 +605,12 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: "{{ base_url }}/api/personas/{{ empleado_id }}"
+      - url: "{{ base_url }}/api/personas/1"
         name: DELETE - Eliminar Persona
         meta:
           id: req_d3b15bcabd774783b9b3b816a75a1505
           created: 1763604693
-          modified: 1763604693
+          modified: 1763730093137
           isPrivate: false
           description: ""
           sortKey: -1763605047691

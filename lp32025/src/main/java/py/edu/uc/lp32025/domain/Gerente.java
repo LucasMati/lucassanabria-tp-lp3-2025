@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import lombok.extern.slf4j.Slf4j;
 import py.edu.uc.lp32025.exception.PermisoDenegadoException;
 import py.edu.uc.lp32025.interfaces.PermisionableGerente;
+import py.edu.uc.lp32025.interfaces.Permisionable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,16 +13,18 @@ import java.time.temporal.ChronoUnit;
 /**
  * Clase Gerente que implementa PermisionableGerente.
  *
- * IMPORTANTE: Los gerentes NO tienen el límite de 20 días anuales.
- * Pueden solicitar más de 20 días al año (objetivo 8 del trabajo).
+ * IMPORTANTE: Los gerentes NO tienen el límite de 20 días anuales (Objetivo 8).
+ * Pueden solicitar más de 20 días al año.
  *
  * Límites propios de Gerente:
  * - Vacaciones: máximo 30 días CONSECUTIVOS por solicitud
  * - Permisos: máximo 10 días por solicitud
+ *
+ * NOTA: También implementa Permisionable para ser compatible con EmpleadoPermisosController
  */
 @Entity
 @Slf4j
-public class Gerente extends EmpleadoTiempoCompleto implements PermisionableGerente {
+public class Gerente extends EmpleadoTiempoCompleto implements PermisionableGerente, Permisionable {
 
     private static final int LIMITE_VACACIONES_CONSECUTIVAS = 30;
     private static final int LIMITE_PERMISOS = 10;
@@ -53,7 +56,7 @@ public class Gerente extends EmpleadoTiempoCompleto implements PermisionableGere
         // Registrar días → Los gerentes SÍ pueden superar los 20 días anuales
         setDiasVacacionesAnuales(getDiasVacacionesAnuales() + (int) diasSolicitados);
 
-        log.info("✓ Vacaciones aprobadas para gerente {} por {} días. Total anual: {} (SIN límite de 20 días)",
+        log.info("✅ Vacaciones aprobadas para gerente {} por {} días. Total anual: {} (SIN límite de 20 días)",
                 getNombre(), diasSolicitados, getTotalDiasSolicitados());
     }
 
@@ -81,7 +84,7 @@ public class Gerente extends EmpleadoTiempoCompleto implements PermisionableGere
         // Registrar días → Los gerentes SÍ pueden superar los 20 días anuales
         setDiasPermisoAnuales(getDiasPermisoAnuales() + (int) diasSolicitados);
 
-        log.info("✓ Permiso aprobado para gerente {} ({}) de {} días. Total anual: {} (SIN límite de 20 días)",
+        log.info("✅ Permiso aprobado para gerente {} ({}) de {} días. Total anual: {} (SIN límite de 20 días)",
                 getNombre(), motivo, diasSolicitados, getTotalDiasSolicitados());
     }
 

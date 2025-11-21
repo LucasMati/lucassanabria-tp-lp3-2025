@@ -2,12 +2,21 @@ package py.edu.uc.lp32025.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import lombok.extern.slf4j.Slf4j;
+import py.edu.uc.lp32025.exception.DiasInsuficientesException;
+import py.edu.uc.lp32025.exception.PermisoDenegadoException;
+import py.edu.uc.lp32025.interfaces.Permisionable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
-public class EmpleadoTiempoCompleto extends Persona {
+@Slf4j
+public class EmpleadoTiempoCompleto extends Persona implements Permisionable {
+
+    private static final int LIMITE_DIAS_ANUALES = 20;
 
     @Column(nullable = false)
     private BigDecimal salarioMensual;  // SALARIO BRUTO
@@ -20,23 +29,68 @@ public class EmpleadoTiempoCompleto extends Persona {
     }
 
     // =============================================================
+    // IMPLEMENTACIÓN DE PERMISIONABLE
+    // =============================================================
+
+    @Override
+    public void solicitarVacaciones(LocalDate inicio, LocalDate fin) throws PermisoDenegadoException {
+        long diasSolicitados = ChronoUnit.DAYS.between(inicio, fin);
+        int totalActual = getDiasVacacionesAnuales() + getDiasPermisoAnuales();
+        int diasDisponibles = LIMITE_DIAS_ANUALES - totalActual;
+
+        // Validar que no supere el límite de 20 días anuales
+        if (totalActual + diasSolicitados > LIMITE_DIAS_ANUALES) {
+            throw new DiasInsuficientesException(
+                    "Vacaciones rechazadas: supera el límite anual de " + LIMITE_DIAS_ANUALES + " días. " +
+                            "Ya tiene " + totalActual + " días solicitados y quiere agregar " + diasSolicitados + " más.",
+                    (int) diasSolicitados,
+                    diasDisponibles,
+                    inicio,
+                    fin
+            );
+        }
+
+        // Registrar días
+        setDiasVacacionesAnuales(getDiasVacacionesAnuales() + (int) diasSolicitados);
+
+        log.info("✅ Vacaciones aprobadas para EmpleadoTiempoCompleto {}: {} días (Total anual: {}/{})",
+                getNombre(), diasSolicitados, getTotalDiasSolicitados(), LIMITE_DIAS_ANUALES);
+    }
+
+    @Override
+    public void solicitarPermiso(String motivo, LocalDate inicio, LocalDate fin) throws PermisoDenegadoException {
+        long diasSolicitados = ChronoUnit.DAYS.between(inicio, fin);
+        int totalActual = getDiasVacacionesAnuales() + getDiasPermisoAnuales();
+        int diasDisponibles = LIMITE_DIAS_ANUALES - totalActual;
+
+        // Validar que no supere el límite de 20 días anuales
+        if (totalActual + diasSolicitados > LIMITE_DIAS_ANUALES) {
+            throw new DiasInsuficientesException(
+                    "Permiso rechazado: supera el límite anual de " + LIMITE_DIAS_ANUALES + " días. " +
+                            "Ya tiene " + totalActual + " días solicitados y quiere agregar " + diasSolicitados + " más.",
+                    (int) diasSolicitados,
+                    diasDisponibles,
+                    inicio,
+                    fin
+            );
+        }
+
+        // Registrar días
+        setDiasPermisoAnuales(getDiasPermisoAnuales() + (int) diasSolicitados);
+
+        log.info("✅ Permiso aprobado para EmpleadoTiempoCompleto {}: {} días (Motivo: {}, Total anual: {}/{})",
+                getNombre(), diasSolicitados, motivo, getTotalDiasSolicitados(), LIMITE_DIAS_ANUALES);
+    }
+
+    // =============================================================
     // MÉTODOS ABSTRACTOS IMPLEMENTADOS
     // =============================================================
 
-    /**
-     * Según el enunciado:
-     * calcularSalario(): retorna el salario mensual.
-     */
     @Override
     public BigDecimal calcularSalario() {
         return salarioMensual == null ? BigDecimal.ZERO : salarioMensual;
     }
 
-    /**
-     * Regla del TP:
-     * - 5% si es del departamento IT
-     * - 3% para el resto
-     */
     @Override
     public BigDecimal calcularDeducciones() {
         if (salarioMensual == null || departamento == null) {
@@ -51,15 +105,6 @@ public class EmpleadoTiempoCompleto extends Persona {
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Regla del TP:
-     * validarDatosEspecificos():
-     *  - salario > 0
-     *  - departamento no vacío
-     *
-     * *PLUS*: mantenemos tu salario mínimo requerido (2899048),
-     * porque vos querías conservarlo.
-     */
     @Override
     public boolean validarDatosEspecificos() {
         final BigDecimal SALARIO_MINIMO_REQUERIDO = new BigDecimal("2899048");
@@ -78,7 +123,8 @@ public class EmpleadoTiempoCompleto extends Persona {
     public String obtenerInformacionCompleta() {
         return super.obtenerInformacionCompleta() +
                 ", Departamento: " + departamento +
-                ", Salario Bruto: " + salarioMensual.setScale(2, RoundingMode.HALF_UP);
+                ", Salario Bruto: " + salarioMensual.setScale(2, RoundingMode.HALF_UP) +
+                ", Días solicitados: " + getTotalDiasSolicitados() + "/" + LIMITE_DIAS_ANUALES;
     }
 
     // =============================================================
